@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using NATS.Client.Core;
 using NATS.Extensions.Microsoft.DependencyInjection;
 using NATS.Net;
 using OpenIddict.Client;
@@ -228,6 +230,7 @@ public class Program
             );
         });
         builder.Services.Configure<NatsSubjects>(builder.Configuration.GetSection("NATS:Subjects"));
+        builder.Services.Configure<NatsStreams>(builder.Configuration.GetSection("NATS:Streams"));
 
 
         //**************************** Logger **************************
@@ -250,6 +253,10 @@ public class Program
 
         //******************* Username Generator *******************
         builder.Services.AddSingleton<UsernameGenerator>();
+
+
+        //******************* initialize database *******************
+        builder.Services.AddHostedService<Database_Initializer>();
 
 
         var app = builder.Build();

@@ -27,7 +27,7 @@ public class NatsEmailSender
         {
             try
             {
-                await _natsClient.PublishAsync(_subjects.LogSubject, emailModel);
+                await _natsClient.PublishAsync(_subjects.Log, emailModel);
             }
             catch (Exception e)
             {

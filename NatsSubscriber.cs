@@ -22,7 +22,7 @@ public class NatsSubscriber : BackgroundService
         _logger.LogInformation("NATS Subscriber Worker is starting...");
 
         // Set up the async stream subscription
-        await foreach (var msg in _client.SubscribeAsync<MyMessage>(subject: _subject, cancellationToken: stoppingToken))
+        await foreach (var msg in _client.SubscribeAsync<MessageData>(subject: _subject, cancellationToken: stoppingToken))
         {
             try
             {
@@ -37,4 +37,9 @@ public class NatsSubscriber : BackgroundService
             }
         }
     }
+}
+
+class MessageData
+{
+
 }
