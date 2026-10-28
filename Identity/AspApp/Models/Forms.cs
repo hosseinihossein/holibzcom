@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using AspApp.Helpers;
 
 namespace AspApp.Models;
 
-public class Authentication_Login_FormModel
+public class Authentication_Login_FormModel : ITurnstileModel
 {
     public string? ReturnUrl { get; set; }
 
@@ -16,7 +17,10 @@ public class Authentication_Login_FormModel
     public string? CfTurnstileResponse { get; set; }
 }
 
-public class Authentication_LoginWithProvider_FormModel
+public class Authentication_LoginWithProvider_FormModel : ITurnstileModel
 {
     public string? ReturnUrl { get; set; }
+
+    [StringLength(2048)]
+    public string? CfTurnstileResponse { get; set; }
 }

@@ -1,6 +1,7 @@
 namespace AspApp.Models;
 
-public record Nats_UserAccount_Payload(
+public record Nats_CreateUserAccount_Payload(
     Guid Id,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? RemoteAvatarUrl
 );

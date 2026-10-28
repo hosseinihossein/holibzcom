@@ -46,7 +46,7 @@ public class Database_Initializer : IHostedService
         UserManager<IdentityUser<Guid>> userManager,
         RoleManager<IdentityRole<Guid>> roleManager,
         INatsClient natsClient,
-        IOptions<NatsSubjects> natsSubject,
+        IOptions<NatsSubjects> natsSubjectOptions,
         ILogger<Database_Initializer> logger,
         IConfiguration configuration
     )
@@ -56,7 +56,7 @@ public class Database_Initializer : IHostedService
         _userManager = userManager;
         _roleManager = roleManager;
         _natsClient = natsClient;
-        _natsSubjects = natsSubject.Value;
+        _natsSubjects = natsSubjectOptions.Value;
         _logger = logger;
         _adminEmail = configuration["Identity:AdminEmail"]!;
         _adminUserName = configuration["Identity:AdminUserName"]!;
@@ -93,9 +93,10 @@ public class Database_Initializer : IHostedService
             }
 
             // send admin info through Nats to submit their profile 
-            Nats_UserAccount_Payload userAccPayload = new Nats_UserAccount_Payload(
+            Nats_CreateUserAccount_Payload userAccPayload = new Nats_CreateUserAccount_Payload(
                 Id: admin.Id,
-                CreatedAt: DateTime.UtcNow
+                CreatedAt: DateTime.UtcNow,
+                RemoteAvatarUrl: null
             );
             await _natsClient.PublishAsync(
                 subject: _natsSubjects.CreateUserAccount,

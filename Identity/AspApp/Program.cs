@@ -250,6 +250,7 @@ public class Program
 
         //**************************** Turnstile **************************
         builder.Services.AddSingleton<TurnstileService>();
+        builder.Services.Configure<TurnstileConfigs>(builder.Configuration.GetSection("Turnstile"));
 
 
         //******************* Username Generator *******************
@@ -258,6 +259,10 @@ public class Program
 
         //******************* initialize database *******************
         builder.Services.AddHostedService<Database_Initializer>();
+
+
+        //******************* Main Configs *******************
+        builder.Services.Configure<MainConfigs>(builder.Configuration);
 
 
         var app = builder.Build();

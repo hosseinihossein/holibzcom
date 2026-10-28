@@ -1,5 +1,10 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AspApp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Options;
 
 namespace AspApp.Helpers;
 
@@ -11,11 +16,14 @@ public class TurnstileService
     private readonly bool _turnstileEnabled;
 
 
-    public TurnstileService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public TurnstileService(
+        IHttpClientFactory httpClientFactory,
+        IOptions<TurnstileConfigs> turnstileOptions
+    )
     {
         _httpClientFactory = httpClientFactory;
-        _secretKey = configuration["TurnstileSecretKey"]!;
-        _turnstileEnabled = configuration.GetValue<bool>("TurnsTileEnable", false);
+        _secretKey = turnstileOptions.Value.SecretKey;
+        _turnstileEnabled = turnstileOptions.Value.Enabled;
     }
 
     public async Task<TurnstileResponse?> ValidateTokenAsync(HttpContext httpContext, string? token = null)
@@ -89,4 +97,61 @@ public class TurnstileResponse
 
     [JsonPropertyName("error-codes")]
     public string[] ErrorCodes { get; set; } = [];
+}
+
+// ************************* Validator *************************
+public class ValidateTurnstileAttribute : ActionFilterAttribute
+{
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        string? cfTurnstileResponse = null;
+
+        if (context.ActionArguments.TryGetValue("CfTurnstileResponse", out object? cfRes) &&
+            cfRes is string cfResArg
+        )
+        {
+            cfTurnstileResponse = cfResArg;
+        }
+        else
+        {
+            foreach (var argument in context.ActionArguments)
+            {
+                if (argument.Value is ITurnstileModel model)
+                {
+                    cfTurnstileResponse = model.CfTurnstileResponse;
+                    break;
+                }
+            }
+        }
+
+        if (cfTurnstileResponse is null)
+        {
+            context.ModelState.AddModelError("TurnstileError", $"Client's CfTurnstileResponse is null in action '{context.ActionDescriptor.DisplayName}'");
+            context.Result = new BadRequestObjectResult(context.ModelState);
+            return;
+        }
+
+        // inject the turnstile service
+        TurnstileService turnstileService = context.HttpContext.RequestServices.GetRequiredService<TurnstileService>();
+
+        TurnstileResponse? turnstileResponse =
+        await turnstileService.ValidateTokenAsync(context.HttpContext, cfTurnstileResponse);
+
+        if (turnstileResponse is null || turnstileResponse.Success is false)
+        {
+            context.ModelState.AddModelError("TurnstileError",
+            turnstileResponse is null ? "response null!" : string.Join(", ", turnstileResponse.ErrorCodes));
+            context.Result = new BadRequestObjectResult(context.ModelState);
+            return;
+        }
+
+        // execute action
+        await next();
+    }
+}
+
+public interface ITurnstileModel
+{
+    [StringLength(2048)]
+    string? CfTurnstileResponse { get; set; }
 }
