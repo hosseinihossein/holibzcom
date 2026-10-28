@@ -1,11 +1,14 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AspApp.Helpers;
 using AspApp.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NATS.Client.Core;
 using OpenIddict.Abstractions;
@@ -60,10 +63,21 @@ public class IdentityController : ControllerBase
     }
 
 
+
+    // **********    Is Turnstile Enabled    **********
     [HttpGet]
     public IActionResult IsTurnstileEnabled()
     {
         return Ok(new { turnstileEnabled = _turnstileEnabled });
+    }
+
+
+    // **********    AntiForgery    **********
+    [HttpGet]
+    [GenerateAntiforgeryTokenCookie]
+    public IActionResult GetAntiForgery()
+    {
+        return Ok();
     }
 
 
@@ -340,7 +354,55 @@ public class IdentityController : ControllerBase
 
 
 
-    // ************** email ************
+    // **********    Signup    **********
+    [HttpPost]
+    [ValidateTurnstile]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Signup([FromForm] Identity_SignupFormModel signupModel,
+    [FromServices] SignInManager<IdentityUser<Guid>> signInManager)
+    {
+        if (ModelState.IsValid)
+        {
+            IdentityUser<Guid> user = new IdentityUser<Guid>()
+            {
+                UserName = signupModel.Username,
+                Email = signupModel.Email,
+                EmailConfirmed = false,
+            };
+            IdentityResult result = await _userManager.CreateAsync(user, signupModel.Password);
+            if (result.Succeeded)
+            {
+                //send email validation link
+                await SendEmailValidationLink(user);
+
+                // send user info through Nats to submit their profile 
+                Nats_CreateUserAccount_Payload userAccPayload = new(
+                    Id: user.Id,
+                    CreatedAt: DateTime.UtcNow,
+                    RemoteAvatarUrl: null
+                );
+                await _natsClient.PublishAsync(
+                    subject: _natsSubjects.CreateUserAccount,
+                    data: userAccPayload
+                );
+
+                // signin to asign the authorization cookie to the agant
+                await signInManager.SignInAsync(user, false);
+
+                return Redirect("~/UserSettings");
+            }
+
+            foreach (IdentityError error in result.Errors)
+            {
+                ModelState.AddModelError("Signup", error.Description);
+            }
+        }
+        return BadRequest(ModelState);
+    }
+
+
+
+    // **********    Email    **********
     private async Task SendEmailValidationLink(IdentityUser<Guid> user)
     {
         //***** Generate Email Validation Token *****
@@ -349,13 +411,291 @@ public class IdentityController : ControllerBase
         //***** Sending Email *****
         string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
         "<p>Please click " +
-        $"<a href='https://{_mainConfigs.MainDomainName}/Identity/ConfirmEmail?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}' " +
+        $"<a href='https://{_mainConfigs.MainDomainName}/api/Identity/ConfirmEmail?token={Uri.EscapeDataString(token)}' " +
         "target='_blank'>'Here'</a>" +
         " to confirm your email address.</p>";
 
         await _emailSender.SendEmailAsync(user.UserName ?? "User", user.Email!, "Email Validation", emailMessage);
     }
 
+    [HttpGet]
+    [Authorize]//if user entered a wrong email address, the attacker can not confirm the account
+    public async Task<IActionResult> ConfirmEmail([FromQuery][StringLength(2048)] string token)
+    {
+        //IdentityUser<Guid>? user = await _userManager.FindByEmailAsync(email);
+        IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            //return error to warning page about user not found
+            //return Redirect("~/Warning?status=danger&msg=User Not found!");
+            ModelState.AddModelError("ConfirmEmail", "User not found!");
+            return BadRequest(ModelState);
+        }
+
+        if (user.EmailConfirmed)
+        {
+            //return info to warning page about user already been confirmed
+            //return Redirect("~/Warning?status=danger&msg=Your Email has already been confirmed!");
+            ModelState.AddModelError("ConfirmEmail", "Your Email has already been confirmed!");
+            return BadRequest(ModelState);
+        }
+
+        // don't need to use Uri.UnescapeStrinData(token), it's done automatically in binding step
+        IdentityResult result = await _userManager.ConfirmEmailAsync(user, token);
+        if (result.Succeeded)
+        {
+            //return Redirect("~/UserProfile");
+            // force the user to authorize again to refresh the oidc tokens
+            //return Redirect("/angular/logout/page/route");//that handles request to ~/Api/Authorization/Logout
+            return Ok(new { success = true });
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("ConfirmEmail", error.Description);
+        }
+
+        return BadRequest(ModelState);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CheckEmail([FromQuery][StringLength(128, MinimumLength = 3)] string email)
+    {
+        bool userExist = await _userManager.Users
+        .AnyAsync(u => u.NormalizedEmail == _userManager.NormalizeEmail(email));
+
+        return Ok(new { isTaken = userExist });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateTurnstile]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResendEmailValidation(
+    [FromForm][StringLength(2048)] string CfTurnstileResponse)
+    {
+        IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            ModelState.AddModelError("User", "User Not found!");
+            return BadRequest(ModelState);
+        }
+
+        if (user.EmailConfirmed)
+        {
+            ModelState.AddModelError("ResendEmailValidation", "Your Email has already been confirmed!");
+            return BadRequest(ModelState);
+        }
+
+        await SendEmailValidationLink(user);
+
+        return Ok(new { success = true });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeEmail([FromForm][StringLength(128)] string newEmail)
+    {
+        IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            //return Redirect("~/Warning?status=danger&msg=User Not found!");
+            ModelState.AddModelError("User", "User Not Found! You need to authenticate.");
+            return BadRequest(ModelState);
+        }
+
+        if (user.Email == newEmail)
+        {
+            ModelState.AddModelError("Email", "The current and the new email addresses are the same!");
+        }
+        else
+        {
+            await SendChangeEmailValidationLink(user, newEmail);
+
+            return Ok(new { success = true });
+        }
+        return BadRequest(ModelState);
+    }
+
+    private async Task SendChangeEmailValidationLink(IdentityUser<Guid> user, string newEmail)
+    {
+        //***** Generate Email Validation Token *****
+        string token = await _userManager.GenerateChangeEmailTokenAsync(user, newEmail);
+
+        //***** Sending Email *****
+        string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
+        "<p>Please click " +
+        $"<a href='https://{_mainConfigs.MainDomainName}/api/Identity/ConfirmNewEmail?token={Uri.EscapeDataString(token)}&newEmail={Uri.EscapeDataString(newEmail)}' " +
+        "target='_blank'>'Here'</a>" +
+        " to confirm your new email.</p>";
+
+        await _emailSender.SendEmailAsync(user.UserName ?? "User", newEmail, "Confirm New Email", emailMessage);
+    }
+
+    [HttpGet]
+    [Authorize]//if user entered a wrong email address, the attacker can not confirm the account
+    public async Task<IActionResult> ConfirmNewEmail([FromQuery][StringLength(2048)] string token,
+    [FromQuery][StringLength(128)] string newEmail)
+    {
+        IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            //return error to warning page about user not found
+            //return Redirect("~/Warning?status=danger&msg=User Not found!");
+            ModelState.AddModelError("ConfirmNewEmail", "User not found!");
+            return BadRequest(ModelState);
+        }
+
+        if (user.Email == newEmail)
+        {
+            //return info to warning page about user already been confirmed
+            //return Redirect("~/Warning?status=danger&msg=Your Email has already been confirmed!");
+            ModelState.AddModelError("ConfirmNewEmail", "Your new Email has already been confirmed!");
+            return BadRequest(ModelState);
+        }
+
+        IdentityResult result = await _userManager.ChangeEmailAsync(user, newEmail, token);
+        if (result.Succeeded)
+        {
+            //return Redirect("~/UserProfile");
+            // force the user to authorize again to refresh the oidc tokens
+            //return Redirect("/angular/logout/page/route");//that handles request to ~/Api/Authorization/Logout
+            return Ok(new { success = true });
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("ConfirmNewEmail", error.Description);
+        }
+
+        return BadRequest(ModelState);
+    }
+
+
+
+    // **********    Password    **********
+    [HttpPost]
+    [ValidateTurnstile]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgetPassword([FromForm][StringLength(128)] string email,
+    [FromForm][StringLength(2048)] string CfTurnstileResponse)
+    {
+        IdentityUser<Guid>? user = await _userManager.FindByEmailAsync(email);
+        if (user is not null)
+        {
+            await SendResetPasswordLink(user);
+
+            return Ok(new { success = true });
+        }
+        ModelState.AddModelError("Email", "Email Not found!");
+        return BadRequest(ModelState);
+    }
+
+    private async Task SendResetPasswordLink(IdentityUser<Guid> user)
+    {
+        //***** Generate Email Validation Token *****
+        string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        //***** Sending Email *****
+        string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
+        "<p>Please click " +
+        $"<a href='https://{_mainConfigs.MainDomainName}/Identity/ResetPassword?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}' " +
+        "target='_blank'>'Here'</a>" +
+        " to proceed resetting your password.</p>";
+
+        await _emailSender.SendEmailAsync(user.UserName ?? "User", user.Email!, "Reset Password", emailMessage);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel)
+    {
+        IdentityUser<Guid>? user = await _userManager.FindByEmailAsync(formModel.Email);
+        if (user is null)
+        {
+            ModelState.AddModelError("User", "User Not Found! Email is invalid!");
+            return BadRequest(ModelState);
+        }
+
+        var result =
+        await _userManager.ResetPasswordAsync(user, formModel.Token, formModel.NewPassword);
+        if (result.Succeeded)
+        {
+            return Ok(new { success = true });
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("SubmitResetPassword", error.Description);
+        }
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitChangePassword(Identity_ChangePasswordFormModel formModel)
+    {
+        IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            ModelState.AddModelError("User", "User Not Found! You need to authenticate.");
+            return BadRequest(ModelState);
+        }
+
+        var result =
+        await _userManager.ChangePasswordAsync(user, formModel.CurrentPassword, formModel.NewPassword);
+        if (result.Succeeded)
+        {
+            // force the user to authorize again to refresh the oidc tokens
+            //return Redirect("/angular/logout/page/route");//that handles request to ~/Api/Authorization/Logout
+            return Ok(new { success = true });
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("SubmitResetPassword", error.Description);
+        }
+        return BadRequest(ModelState);
+    }
+
+
+
+    // **********    UserName    **********
+    [HttpGet]
+    public async Task<IActionResult> CheckUsername([FromQuery][StringLength(60, MinimumLength = 3)] string username)
+    {
+        bool userExist = await _userManager.Users
+        .AnyAsync(u => u.NormalizedUserName == _userManager.NormalizeName(username));
+
+        return Ok(new { isTaken = userExist });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitUsername([FromQuery][StringLength(60, MinimumLength = 3)] string username)
+    {
+        IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            ModelState.AddModelError("User", "User Not Found! You need to login.");
+            return BadRequest(ModelState);
+        }
+
+        var result = await _userManager.SetUserNameAsync(user, username);
+        if (result.Succeeded)
+        {
+            return Ok(new { success = true });
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("Username", error.Description);
+        }
+        return BadRequest(ModelState);
+    }
 
 
 
