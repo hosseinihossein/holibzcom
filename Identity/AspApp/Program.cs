@@ -234,13 +234,14 @@ public class Program
 
 
         //**************************** Logger **************************
-        builder.Logging.ClearProviders();// Optional: Remove console/debug providers if desired
+        /*builder.Logging.ClearProviders();// Optional: Remove console/debug providers if desired
         builder.Logging.AddConsole(); // Keep Console for local visibility
-        builder.Logging.AddNats();// Enable transmission over NATS
+        builder.Logging.AddNats();// Enable transmission over NATS*/
 
 
         //**************************** Email Sender **************************
-        builder.Services.AddSingleton<NatsEmailSender>();
+        //builder.Services.AddSingleton<NatsEmailSender>();
+        builder.Services.AddSingleton<IEmailSender, EmailSender>();
 
 
         //******************* IHttpClientFactory *******************
