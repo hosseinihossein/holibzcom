@@ -1,8 +1,0 @@
-- Create a new stream
-nats stream add --config UserAccountStream.json
-
-- Update an existing stream
-nats stream edit UserAccount --config UserAccountStream.json
-
-- Check the configuration:
-nats stream info UserAccount
