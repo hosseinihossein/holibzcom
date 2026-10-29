@@ -9,9 +9,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using NATS.Client.Core;
-using NATS.Extensions.Microsoft.DependencyInjection;
-using NATS.Net;
+using MongoDB.Driver;
 using OpenIddict.Client;
 using OpenIddict.Client.AspNetCore;
 
@@ -78,7 +76,7 @@ public class Program
             options.ExpireTimeSpan = TimeSpan.FromDays(14);//null or don't set for session lifetime
             options.SlidingExpiration = true;//Reset expiration when user interacts halfway through the lifespan
 
-            options.LoginPath = "/Authentication";
+            options.LoginPath = "/Identity/Login";
             //options.AccessDeniedPath = "/Account/AccessDenied";
         });
 
@@ -114,24 +112,13 @@ public class Program
 
         //******************* OpenIddict *******************
         builder.Services.AddOpenIddict()
-        /*.AddCore(options =>
-        {
-            options.UseEntityFrameworkCore()
-            .UseDbContext<Identity_DbContext>()
-            .ReplaceDefaultEntities<Guid>();
-        })*/
         .AddClient(async options =>
         {
             // Note: this sample uses the code flow, but you can enable the other flows if necessary.
             options.AllowAuthorizationCodeFlow();
 
             // Register the signing and encryption credentials used to protect
-            // sensitive data like the state tokens produced by OpenIddict.            
-            /*options.AddEncryptionCertificate(clientEncryptionCert)
-            .AddSigningCredentials(new SigningCredentials(
-                new ECDsaSecurityKey(ECDsa.Create(ECCurve.NamedCurves.nistP256)),
-                SecurityAlgorithms.EcdsaSha256
-            ))*/
+            // sensitive data like the state tokens produced by OpenIddict.
             options.AddEncryptionCertificate(await certManager.GetRsaKeyEncryptionCert())
             .AddSigningKey(new ECDsaSecurityKey(ECDsa.Create(ECCurve.NamedCurves.nistP256)));
 
@@ -215,9 +202,27 @@ public class Program
         });
 
 
+        //**************************** MongoDb **************************
+        // Register IMongoClient as a Singleton factory
+        builder.Services.AddSingleton<IMongoClient>(sp =>
+            new MongoClient(builder.Configuration["MongoDb:ConnectionString"])
+        );
+        // Register IMongoDatabase as a Singleton factory
+        builder.Services.AddSingleton<IMongoDatabase>(sp =>
+        {
+            var client = sp.GetRequiredService<IMongoClient>();
+            var dbName = builder.Configuration["MongoDb:DatabaseName"];
+            return client.GetDatabase(dbName);
+        });
+        // Configs
+        builder.Services.Configure<MongoDbConfigs>(builder.Configuration.GetSection("MongoDb"));
+        // UserAccountManager
+        builder.Services.AddSingleton<UserAccountManager>();
+
+
         //**************************** NATS **************************
         // Register the NATS Client into the DI Container
-        builder.Services.AddNatsClient(options =>
+        /*builder.Services.AddNatsClient(options =>
         {
             options.ConfigureOptions(opts =>
                 opts.Configure(natsBuilder =>
@@ -230,7 +235,7 @@ public class Program
             );
         });
         builder.Services.Configure<NatsSubjects>(builder.Configuration.GetSection("NATS:Subjects"));
-        builder.Services.Configure<NatsStreams>(builder.Configuration.GetSection("NATS:Streams"));
+        builder.Services.Configure<NatsStreams>(builder.Configuration.GetSection("NATS:Streams"));*/
 
 
         //**************************** Logger **************************

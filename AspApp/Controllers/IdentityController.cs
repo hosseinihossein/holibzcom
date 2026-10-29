@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using NATS.Client.Core;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using OpenIddict.Abstractions;
 using OpenIddict.Client.AspNetCore;
 using OpenIddict.Client.WebIntegration;
@@ -33,10 +34,9 @@ public class IdentityController : ControllerBase
     private readonly IEmailSender _emailSender;
     private readonly bool _turnstileEnabled;
 
-    private readonly INatsClient _natsClient;
-    private readonly NatsSubjects _natsSubjects;
-
     private readonly MainConfigs _mainConfigs;
+
+    private readonly UserAccountManager _userAccountManager;
 
 
     public IdentityController(
@@ -46,9 +46,8 @@ public class IdentityController : ControllerBase
         UsernameGenerator usernameGenerator,
         IEmailSender emailSender,
         IOptions<TurnstileConfigs> turnstileOptions,
-        INatsClient natsClient,
-        IOptions<NatsSubjects> natsSubjectOptions,
-        MainConfigs mainConfigs
+        MainConfigs mainConfigs,
+        UserAccountManager userAccountManager
     )
     {
         _signInManager = signInManager;
@@ -57,9 +56,8 @@ public class IdentityController : ControllerBase
         _usernameGenerator = usernameGenerator;
         _emailSender = emailSender;
         _turnstileEnabled = turnstileOptions.Value.Enabled;
-        _natsClient = natsClient;
-        _natsSubjects = natsSubjectOptions.Value;
         _mainConfigs = mainConfigs;
+        _userAccountManager = userAccountManager;
     }
 
 
@@ -243,16 +241,13 @@ public class IdentityController : ControllerBase
                     await SendEmailValidationLink(user);
                 }
 
-                // send user info through Nats to submit their profile 
-                Nats_CreateUserAccount_Payload userAccPayload = new(
-                    Id: user.Id,
-                    CreatedAt: DateTime.UtcNow,
-                    RemoteAvatarUrl: null
-                );
-                await _natsClient.PublishAsync(
-                    subject: _natsSubjects.CreateUserAccount,
-                    data: userAccPayload
-                );
+                // send new user to user account manager
+                NewUserAccountModel newUserAccountModel = new()
+                {
+                    Id = user.Id,
+                    RemoteAvatarUrl = result.Principal.GetClaim("avatar_url"),
+                };
+                await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
             }
             else
             {
@@ -265,7 +260,7 @@ public class IdentityController : ControllerBase
         var exSigninResult = await _signInManager.ExternalLoginSignInAsync(loginProvider, providerKey, true);
         //Console.WriteLine($"***** exSigninResult: {exSigninResult}");
 
-        return Redirect(result.Properties.RedirectUri ?? "/api/identity/Authorization/Authorize");
+        return Redirect(result.Properties.RedirectUri ?? "/");
     }
 
 
@@ -308,7 +303,7 @@ public class IdentityController : ControllerBase
                 {
                     UserName = username,
                     Email = userEmail,
-                    // why gmail need to be verified
+                    // why gmail needs to be verified!
                     EmailConfirmed = bool.Parse(result.Principal.GetClaims("email_verified")[0].ToLower())
                 };
                 var userCreationResult = await _userManager.CreateAsync(user);
@@ -327,16 +322,13 @@ public class IdentityController : ControllerBase
                     await SendEmailValidationLink(user);
                 }
 
-                // send user info through Nats to submit their profile 
-                Nats_CreateUserAccount_Payload userAccPayload = new(
-                    Id: user.Id,
-                    CreatedAt: DateTime.UtcNow,
-                    RemoteAvatarUrl: null
-                );
-                await _natsClient.PublishAsync(
-                    subject: _natsSubjects.CreateUserAccount,
-                    data: userAccPayload
-                );
+                // send new user to user account manager
+                NewUserAccountModel newUserAccountModel = new()
+                {
+                    Id = user.Id,
+                    RemoteAvatarUrl = result.Principal.GetClaim("picture"),
+                };
+                await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
             }
             else
             {
@@ -375,21 +367,17 @@ public class IdentityController : ControllerBase
                 //send email validation link
                 await SendEmailValidationLink(user);
 
-                // send user info through Nats to submit their profile 
-                Nats_CreateUserAccount_Payload userAccPayload = new(
-                    Id: user.Id,
-                    CreatedAt: DateTime.UtcNow,
-                    RemoteAvatarUrl: null
-                );
-                await _natsClient.PublishAsync(
-                    subject: _natsSubjects.CreateUserAccount,
-                    data: userAccPayload
-                );
+                // send new user to user account manager
+                NewUserAccountModel newUserAccountModel = new()
+                {
+                    Id = user.Id,
+                };
+                await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
 
                 // signin to asign the authorization cookie to the agant
                 await signInManager.SignInAsync(user, false);
 
-                return Redirect("~/UserSettings");
+                return Ok(new { success = true });
             }
 
             foreach (IdentityError error in result.Errors)
