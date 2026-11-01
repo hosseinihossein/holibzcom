@@ -1,0 +1,35 @@
+<form [formRoot]="loginForm">
+
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>Username or Email</mat-label>
+        <input type="text" matInput [formField]="loginForm.UsernameOrEmail">
+        @if(loginForm.UsernameOrEmail().touched() && loginForm.UsernameOrEmail().invalid()){
+        <mat-error>
+            @for(error of loginForm.UsernameOrEmail().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>Password</mat-label>
+        <input type="password" matInput #passwordInput [formField]="loginForm.Password">
+        @if(passwordInput.type == 'password'){
+        <mat-icon matSuffix (click)="passwordInput.type='text'">visibility</mat-icon>
+        }
+        @else{
+        <mat-icon matSuffix (click)="passwordInput.type='password'">visibility_Off</mat-icon>
+        }
+        @if(loginForm.Password().touched() && loginForm.Password().invalid()){
+        <mat-error>
+            @for(error of loginForm.Password().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+
+
+</form>
