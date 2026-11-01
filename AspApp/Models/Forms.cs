@@ -17,12 +17,12 @@ public class Authentication_Login_FormModel : ITurnstileModel
     public string? CfTurnstileResponse { get; set; }
 }
 
-public class Authentication_LoginWithProvider_FormModel : ITurnstileModel
+public class Authentication_LoginWithProvider_FormModel //: ITurnstileModel
 {
     public string? ReturnUrl { get; set; }
 
-    [StringLength(2048)]
-    public string? CfTurnstileResponse { get; set; }
+    /*[StringLength(2048)]
+    public string? CfTurnstileResponse { get; set; }*/
 }
 
 public class Identity_SignupFormModel : ITurnstileModel

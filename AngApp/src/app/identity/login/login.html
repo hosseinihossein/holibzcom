@@ -30,6 +30,58 @@
         }
     </mat-form-field>
 
+    @if(turnstileService.isEnabled()){
+    <div id="widget-container"></div>
+    }
 
+    <div>
+        @if(generalError()){
+        <p style="font-size: 14px;color: var(--mat-sys-error);">{{generalError()}}</p>
+        }
+        @if(loginForm().errors().length > 0 ){
+        <p style="font-size: 14px;color: var(--mat-sys-error);">
+            @for(error of loginForm().errors(); track error){
+            {{error.message}}
+            }
+        </p>
+        }
+        <button matButton="filled" id="login-btn" type="submit"
+            [disabled]="loginForm().invalid() || loginForm().submitting()">
+            Login
+        </button>
+    </div>
 
+    <div class="clearfix" style="margin: 8px auto;">
+        <button type="button" matButton id="forgetPassword-btn" (click)="forgetPassword()">Forget password?</button>
+        <a matButton id="signup-btn" [routerLink]="['/identity/signup']"> Create a new account</a>
+    </div>
+
+    <div style="text-align: center;font-size: 12px;margin: 16px 0;">or</div>
+
+    <div style="margin: auto;display: flex; justify-content: space-evenly;">
+        <button type="submit" form="login-with-github" matFab matTooltip="Login with GitHub">
+            <img priority width="64" height="64" ngSrc="https://img.icons8.com/sf-black-filled/64/github.png"
+                alt="github-logo" />
+        </button>
+        <button type="submit" form="login-with-google" matFab matTooltip="Login with Google">
+            <img priority width="48" height="48" ngSrc="https://img.icons8.com/color/48/google-logo.png"
+                alt="google-logo" />
+        </button>
+    </div>
+
+    @if (displayWait()) {
+    <app-wait-spinner></app-wait-spinner>
+    }
+
+</form>
+
+<form id="login-with-google" hidden action="/api/identity/LoginWithGoogle" method="post"
+    enctype="application/x-www-form-urlencoded" (submit)="displayWait.set(true)">
+    <input type="hidden" name="ReturnUrl" [value]="loginForm.ReturnUrl().value()">
+    <!--button type="submit">Login with Google</button-->
+</form>
+<form id="login-with-github" hidden action="/api/identity/LoginWithGitHub" method="post"
+    enctype="application/x-www-form-urlencoded" (submit)="displayWait.set(true)">
+    <input type="hidden" name="ReturnUrl" [value]="loginForm.ReturnUrl().value()">
+    <!--button type="submit">Login with GitHub</button-->
 </form>

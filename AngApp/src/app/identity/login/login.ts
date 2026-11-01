@@ -1,26 +1,121 @@
-import { Component, signal } from '@angular/core';
-import { form, FormRoot, FormField } from '@angular/forms/signals';
+import { Component, effect, inject, signal } from '@angular/core';
+import { form, FormRoot, FormField, required, minLength, FieldTree } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
+import { TurnstileService } from '../../shared/services/turnstile-service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
+import { NgOptimizedImage } from '@angular/common';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatButton, MatFabButton } from '@angular/material/button';
+import { IdentityService } from '../identity-service';
+import { firstValueFrom } from 'rxjs';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 
 @Component({
-  imports: [FormRoot, MatFormField, MatLabel, MatInput, FormField, MatError, MatIcon, MatSuffix],
+  imports: [FormRoot, MatFormField, MatLabel, MatInput, FormField, MatError, MatIcon, MatSuffix,
+    RouterLink, WaitSpinner, NgOptimizedImage, MatTooltip, MatFabButton, MatButton
+  ],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',
 })
 export class Login {
+  turnstileService = inject(TurnstileService);
+  activatedRoute = inject(ActivatedRoute);
+  identityService = inject(IdentityService);
+  router = inject(Router);
+
+  generalError = signal('');
+  displayWait = signal(false);
+
   loginModel = signal<LoginFormModel>({
     CfTurnstileResponse: '',
     Password: '',
-    UsernameOrEmail: ''
+    UsernameOrEmail: '',
+    ReturnUrl: this.activatedRoute.snapshot.queryParamMap.get("ReturnUrl") || "/",
   });
-  loginForm = form(this.loginModel);
+  loginForm = form(this.loginModel,
+    (schemaPath)=>{
+      required(schemaPath.UsernameOrEmail, {message:"Username or Email is required!"});
+      
+      required(schemaPath.Password, {message:"Enter your Password!"});
+      minLength(schemaPath.Password, 8, {message:"Password must be at least 8 characters!"});
+    },
+    {
+      submission: {
+        action: async (field) => {
+          this.displayWait.set(true);
+
+          let result:{kind:string,message:string,fieldTree:FieldTree<LoginFormModel|string, string | number, "writable">}[]|null = null;
+          try{
+            let res = await firstValueFrom(this.identityService.submitLogin(this.loginModel()));
+            if(res.redirected && res.url){
+              const destinationPath = new URL(res.url).pathname;
+              this.router.navigateByUrl(destinationPath, {replaceUrl: true});
+            }
+          }
+          catch(err){
+            if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
+              //console.error("BadRequest err: "+err.error);
+              result ??= [];
+              if(err.error.UsernameOrEmail || err.error.errors?.UsernameOrEmail){
+                result.push({
+                  kind: "UsernameOrEmail",
+                  message: err.error.UsernameOrEmail || err.error.errors?.UsernameOrEmail,
+                  fieldTree: field.UsernameOrEmail
+                });
+              }
+              else if(err.error.Password || err.error.errors?.Password){
+                result.push({
+                  kind: "Password",
+                  message: err.error.Password || err.error.errors?.Password,
+                  fieldTree: field.Password
+                });
+              }
+              else if(err.error.CfTurnstileResponse || err.error.errors?.CfTurnstileResponse){
+                result.push({
+                  kind: "CfTurnstileResponse",
+                  message: err.error.CfTurnstileResponse || err.error.errors?.CfTurnstileResponse,
+                  fieldTree: field.CfTurnstileResponse
+                });
+              }
+              else{
+                result.push({
+                  kind: "LoginError",
+                  message: err.message,
+                  fieldTree: field
+                });
+              }
+            }
+          }
+          this.displayWait.set(false);
+          if(result){
+            this.turnstileService.resetWidget();
+          }
+          return result;
+        },
+      }
+    }
+  );
+
+  constructor(){
+    effect(()=>{
+      if(this.turnstileService.isEnabled()){
+        this.turnstileService.loadWidget(this.loginForm.CfTurnstileResponse, this.generalError);
+      }
+    });
+  }
+
+  forgetPassword(){}
+
+
 }
 
-interface LoginFormModel{
+export interface LoginFormModel{
   UsernameOrEmail: string;
   Password: string;
   CfTurnstileResponse: string;
+  ReturnUrl: string;
 }

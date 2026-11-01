@@ -98,7 +98,7 @@ public class IdentityController : ControllerBase
 
         if (user is null)
         {
-            ModelState.AddModelError("Username", "Couldn't find any user with the specified Username or Email");
+            ModelState.AddModelError("UsernameOrEmail", "Couldn't find any user with the specified Username or Email");
             return BadRequest(ModelState);
         }
 
@@ -115,7 +115,7 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost]
-    [ValidateTurnstile]
+    //[ValidateTurnstile]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoginWithGitHub([FromForm] Authentication_LoginWithProvider_FormModel formModel)
     {
@@ -131,7 +131,7 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost]
-    [ValidateTurnstile]
+    //[ValidateTurnstile]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoginWithGoogle([FromForm] Authentication_LoginWithProvider_FormModel formModel)
     {
