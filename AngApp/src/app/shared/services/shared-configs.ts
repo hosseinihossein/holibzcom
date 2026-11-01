@@ -1,4 +1,4 @@
-import { computed, DOCUMENT, effect, inject, Service, signal } from '@angular/core';
+import { afterNextRender, computed, DOCUMENT, effect, inject, Service, signal } from '@angular/core';
 
 @Service()
 export class SharedConfigs {
@@ -7,13 +7,15 @@ export class SharedConfigs {
     readonly colorScheme = computed(()=>this._colorScheme());
 
     constructor(){
-        let cs = localStorage.getItem("colorScheme");
-        if(cs){
-            if(cs === 'dark') 
-                this._colorScheme.set('dark');
-            else 
-                this._colorScheme.set('light');
-        }
+        afterNextRender(()=>{
+            let cs = localStorage.getItem("colorScheme");
+            if(cs){
+                if(cs === 'dark') 
+                    this._colorScheme.set('dark');
+                else 
+                    this._colorScheme.set('light');
+            }
+        });
     }
 
     toggleColorScheme(){

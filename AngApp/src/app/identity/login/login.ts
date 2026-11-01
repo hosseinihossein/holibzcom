@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { afterNextRender, Component, effect, inject, injectAsync, onIdle, signal } from '@angular/core';
 import { form, FormRoot, FormField, required, minLength, FieldTree } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
@@ -22,13 +22,14 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
   templateUrl: './login.html',
 })
 export class Login {
-  turnstileService = inject(TurnstileService);
+  _turnstileService = injectAsync(()=>import('../../shared/services/turnstile-service').then(m=>m.TurnstileService),{prefetch: onIdle});
   activatedRoute = inject(ActivatedRoute);
-  identityService = inject(IdentityService);
+  _identityService = injectAsync(()=>import('../identity-service').then(m=>m.IdentityService), {prefetch: onIdle});
   router = inject(Router);
 
   generalError = signal('');
   displayWait = signal(false);
+  turnstileEnabled = signal(false);
 
   loginModel = signal<LoginFormModel>({
     CfTurnstileResponse: '',
@@ -46,11 +47,12 @@ export class Login {
     {
       submission: {
         action: async (field) => {
+          const identityService = await this._identityService();
           this.displayWait.set(true);
 
           let result:{kind:string,message:string,fieldTree:FieldTree<LoginFormModel|string, string | number, "writable">}[]|null = null;
           try{
-            let res = await firstValueFrom(this.identityService.submitLogin(this.loginModel()));
+            let res = await firstValueFrom(identityService.submitLogin(this.loginModel()));
             if(res.redirected && res.url){
               const destinationPath = new URL(res.url).pathname;
               this.router.navigateByUrl(destinationPath, {replaceUrl: true});
@@ -91,8 +93,9 @@ export class Login {
             }
           }
           this.displayWait.set(false);
+          const turnstileService = await this._turnstileService();
           if(result){
-            this.turnstileService.resetWidget();
+            turnstileService.resetWidget();
           }
           return result;
         },
@@ -101,9 +104,11 @@ export class Login {
   );
 
   constructor(){
-    effect(()=>{
-      if(this.turnstileService.isEnabled()){
-        this.turnstileService.loadWidget(this.loginForm.CfTurnstileResponse, this.generalError);
+    afterNextRender(async ()=>{
+      const turnstileService = await this._turnstileService();
+      if(turnstileService.isEnabled()){
+        this.turnstileEnabled.set(true);
+        turnstileService.loadWidget(this.loginForm.CfTurnstileResponse, this.generalError);
       }
     });
   }

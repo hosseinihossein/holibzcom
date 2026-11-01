@@ -1,2 +1,5 @@
 /
-/Identity
+/identity/login
+/identity/signup
+/identity/settings
+/identity/resetpassword

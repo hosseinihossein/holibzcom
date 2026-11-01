@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Service, signal, WritableSignal } from '@angular/core';
+import { afterNextRender, inject, Service, signal, WritableSignal } from '@angular/core';
 import { FieldTree } from '@angular/forms/signals';
 import { SharedConfigs } from './shared-configs';
 
@@ -17,6 +17,8 @@ export class TurnstileService {
 
     constructor(){
         this.checkEnable();
+        /*afterNextRender(()=>{
+        });*/
     }
 
     checkEnable(){

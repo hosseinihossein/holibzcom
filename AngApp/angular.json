@@ -42,9 +42,6 @@
           "builder": "@angular/build:application",
           "options": {
             "outputPath": "./MyOutputDir",
-            "prerender": {
-              "routesFile": "routes.txt"
-            },
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
@@ -55,7 +52,7 @@
             ],
             "styles": ["src/material-theme.scss", "src/styles.css"],
             "server": "src/main.server.ts",
-            "outputMode": "server",
+            "outputMode": "static",
             "security": {
               "allowedHosts": []
             },
