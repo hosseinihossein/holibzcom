@@ -1,15 +1,13 @@
-import { afterNextRender, Component, effect, inject, injectAsync, onIdle, signal } from '@angular/core';
-import { form, FormRoot, FormField, required, minLength, FieldTree } from '@angular/forms/signals';
+import { afterNextRender, Component, inject, injectAsync, onIdle, signal } from '@angular/core';
+import { form, FormRoot, FormField, required, minLength, FieldTree, maxLength } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
-import { TurnstileService } from '../../shared/services/turnstile-service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 import { NgOptimizedImage } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatButton, MatFabButton } from '@angular/material/button';
-import { IdentityService } from '../identity-service';
 import { firstValueFrom } from 'rxjs';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 
@@ -40,9 +38,12 @@ export class Login {
   loginForm = form(this.loginModel,
     (schemaPath)=>{
       required(schemaPath.UsernameOrEmail, {message:"Username or Email is required!"});
+      minLength(schemaPath.UsernameOrEmail, 3, {message: "Username or Email must be at least 3 characters!"})
+      maxLength(schemaPath.UsernameOrEmail, 128, {message: "Username or Email cannot be more than 128 characters!"})
       
       required(schemaPath.Password, {message:"Enter your Password!"});
       minLength(schemaPath.Password, 8, {message:"Password must be at least 8 characters!"});
+      maxLength(schemaPath.Password, 60, {message:"Password cannot be more than 60 characters!"});
     },
     {
       submission: {
@@ -69,29 +70,29 @@ export class Login {
                   fieldTree: field.UsernameOrEmail
                 });
               }
-              else if(err.error.Password || err.error.errors?.Password){
+              if(err.error.Password || err.error.errors?.Password){
                 result.push({
                   kind: "Password",
                   message: err.error.Password || err.error.errors?.Password,
                   fieldTree: field.Password
                 });
               }
-              else if(err.error.CfTurnstileResponse || err.error.errors?.CfTurnstileResponse){
+              if(err.error.CfTurnstileResponse || err.error.errors?.CfTurnstileResponse){
                 result.push({
                   kind: "CfTurnstileResponse",
                   message: err.error.CfTurnstileResponse || err.error.errors?.CfTurnstileResponse,
                   fieldTree: field.CfTurnstileResponse
                 });
               }
-              else{
-                result.push({
-                  kind: "LoginError",
-                  message: err.message,
-                  fieldTree: field
-                });
-              }
+              
+              result.push({
+                kind: "LoginError",
+                message: "An error occured during login: " + err.message,
+                fieldTree: field
+              });
             }
           }
+
           this.displayWait.set(false);
           const turnstileService = await this._turnstileService();
           if(result){
@@ -113,7 +114,7 @@ export class Login {
     });
   }
 
-  forgetPassword(){}
+  //forgetPassword(){}
 
 
 }

@@ -5,6 +5,8 @@ import { SharedConfigs } from './shared-configs';
 
 declare const turnstile:any;
 
+// the TurnstileService must be lazily injected with injectAsync() 
+// and called in afterNextRednder() in the constructor
 @Service()
 export class TurnstileService {
     private readonly httpClient = inject(HttpClient);

@@ -4,12 +4,12 @@ form{
     padding: 24px;
     width: 300px;
     max-width: 75vw;
-    /*margin: 8px auto;*/
+    margin: 8px auto;
     box-shadow: 0 5px 5px var(--mat-sys-outline-variant);
-    position: absolute;
+    /*position: absolute;
     top: 50vh;
     left: 50vw;
-    transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);*/
     overflow: hidden;
 }
 
@@ -27,7 +27,7 @@ mat-form-field{
     margin: auto;
 }
 
-#signup-btn{
+#newAccount-btn{
     float: right;
     font-size: 12px;
 }

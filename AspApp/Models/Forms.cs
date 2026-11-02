@@ -3,7 +3,7 @@ using AspApp.Helpers;
 
 namespace AspApp.Models;
 
-public class Authentication_Login_FormModel : ITurnstileModel
+public class Identity_Login_FormModel : ITurnstileModel
 {
     public string? ReturnUrl { get; set; }
 
@@ -17,7 +17,7 @@ public class Authentication_Login_FormModel : ITurnstileModel
     public string? CfTurnstileResponse { get; set; }
 }
 
-public class Authentication_LoginWithProvider_FormModel //: ITurnstileModel
+public class Identity_LoginWithProvider_FormModel //: ITurnstileModel
 {
     public string? ReturnUrl { get; set; }
 

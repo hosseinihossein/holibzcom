@@ -84,7 +84,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [ValidateTurnstile]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login([FromForm] Authentication_Login_FormModel formModel)
+    public async Task<IActionResult> Login([FromForm] Identity_Login_FormModel formModel)
     {
         IdentityUser<Guid>? user;
         if (formModel.UsernameOrEmail.Contains('@'))
@@ -117,7 +117,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     //[ValidateTurnstile]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> LoginWithGitHub([FromForm] Authentication_LoginWithProvider_FormModel formModel)
+    public async Task<IActionResult> LoginWithGitHub([FromForm] Identity_LoginWithProvider_FormModel formModel)
     {
         var properties = new AuthenticationProperties
         {
@@ -133,7 +133,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     //[ValidateTurnstile]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> LoginWithGoogle([FromForm] Authentication_LoginWithProvider_FormModel formModel)
+    public async Task<IActionResult> LoginWithGoogle([FromForm] Identity_LoginWithProvider_FormModel formModel)
     {
         var properties = new AuthenticationProperties
         {
@@ -350,40 +350,36 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [ValidateTurnstile]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Signup([FromForm] Identity_SignupFormModel signupModel,
-    [FromServices] SignInManager<IdentityUser<Guid>> signInManager)
+    public async Task<IActionResult> Signup([FromForm] Identity_SignupFormModel signupModel)
     {
-        if (ModelState.IsValid)
+        IdentityUser<Guid> user = new IdentityUser<Guid>()
         {
-            IdentityUser<Guid> user = new IdentityUser<Guid>()
+            UserName = signupModel.Username,
+            Email = signupModel.Email,
+            EmailConfirmed = false,
+        };
+        IdentityResult result = await _userManager.CreateAsync(user, signupModel.Password);
+        if (result.Succeeded)
+        {
+            //send email validation link
+            _ = SendEmailValidationLink(user);
+
+            // send new user to user account manager
+            NewUserAccountModel newUserAccountModel = new()
             {
-                UserName = signupModel.Username,
-                Email = signupModel.Email,
-                EmailConfirmed = false,
+                Id = user.Id,
             };
-            IdentityResult result = await _userManager.CreateAsync(user, signupModel.Password);
-            if (result.Succeeded)
-            {
-                //send email validation link
-                await SendEmailValidationLink(user);
+            await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
 
-                // send new user to user account manager
-                NewUserAccountModel newUserAccountModel = new()
-                {
-                    Id = user.Id,
-                };
-                await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
+            // signin to asign the authorization cookie to the agant
+            await _signInManager.SignInAsync(user, true);
 
-                // signin to asign the authorization cookie to the agant
-                await signInManager.SignInAsync(user, false);
+            return Ok(new { success = true });
+        }
 
-                return Ok(new { success = true });
-            }
-
-            foreach (IdentityError error in result.Errors)
-            {
-                ModelState.AddModelError("Signup", error.Description);
-            }
+        foreach (IdentityError error in result.Errors)
+        {
+            ModelState.AddModelError("Signup", error.Description);
         }
         return BadRequest(ModelState);
     }

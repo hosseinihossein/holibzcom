@@ -30,9 +30,7 @@
         }
     </mat-form-field>
 
-    @if(turnstileEnabled()){
     <div id="widget-container"></div>
-    }
 
     <div>
         @if(generalError()){
@@ -52,8 +50,9 @@
     </div>
 
     <div class="clearfix" style="margin: 8px auto;">
-        <button type="button" matButton id="forgetPassword-btn" (click)="forgetPassword()">Forget password?</button>
-        <a matButton id="signup-btn" [routerLink]="['/identity/signup']"> Create a new account</a>
+        <!--button type="button" matButton id="forgetPassword-btn" (click)="forgetPassword()">Forget password?</button-->
+        <a matButton id="forgetPassword-btn" [routerLink]="['/identity/resetpassword']">Forget Password?</a>
+        <a matButton id="newAccount-btn" [routerLink]="['/identity/signup']"> Create a new account</a>
     </div>
 
     <div style="text-align: center;font-size: 12px;margin: 16px 0;">or</div>

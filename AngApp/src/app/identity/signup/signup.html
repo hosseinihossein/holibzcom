@@ -1,1 +1,104 @@
-<p>signup works!</p>
+<form [formRoot]="signupForm">
+
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>Email</mat-label>
+        <input type="text" matInput [formField]="signupForm.Email">
+        @if(signupForm.Email().touched() && signupForm.Email().invalid()){
+        <mat-error>
+            @for(error of signupForm.Email().errors(); track error){
+            <span style="display: inline-block;">{{error.message}}</span>
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>Username</mat-label>
+        <input type="text" matInput [formField]="signupForm.Username">
+        @if(signupForm.Username().touched() && signupForm.Username().invalid()){
+        <mat-error>
+            @for(error of signupForm.Username().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>Password</mat-label>
+        <input type="password" matInput #passwordInput [formField]="signupForm.Password">
+        @if(passwordInput.type == 'password'){
+        <mat-icon matSuffix (click)="passwordInput.type='text'">visibility</mat-icon>
+        }
+        @else{
+        <mat-icon matSuffix (click)="passwordInput.type='password'">visibility_Off</mat-icon>
+        }
+        @if(signupForm.Password().touched() && signupForm.Password().invalid()){
+        <mat-error>
+            @for(error of signupForm.Password().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>Confirm Password</mat-label>
+        <input type="password" matInput #confirmPasswordInput [formField]="signupForm.ConfirmPassword">
+        @if(confirmPasswordInput.type == 'password'){
+        <mat-icon matSuffix (click)="confirmPasswordInput.type='text'">visibility</mat-icon>
+        }
+        @else{
+        <mat-icon matSuffix (click)="confirmPasswordInput.type='password'">visibility_Off</mat-icon>
+        }
+        @if(signupForm.ConfirmPassword().touched() && signupForm.ConfirmPassword().invalid()){
+        <mat-error>
+            @for(error of signupForm.ConfirmPassword().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <div id="widget-container"></div>
+
+    <div>
+        @if(generalError()){
+        <p style="font-size: 14px;color: var(--mat-sys-error);">{{generalError()}}</p>
+        }
+        @if(signupForm().errors().length > 0 ){
+        <p style="font-size: 14px;color: var(--mat-sys-error);">
+            @for(error of signupForm().errors(); track error){
+            {{error.message}}
+            }
+        </p>
+        }
+        <button matButton="filled" id="submit-btn" type="submit"
+            [disabled]="signupForm().invalid() || signupForm().submitting()">
+            Submit
+        </button>
+    </div>
+
+    <div class="clearfix" style="margin: 8px auto;">
+        <span style="font-size: 12px;display: inline-block;padding: 10px;">Already have an account?</span>
+        <a matButton id="login-btn" [routerLink]="['/identity/login']">Login</a>
+    </div>
+
+    <div style="text-align: center;font-size: 12px;margin: 16px 0;">or</div>
+
+    <div style="margin: auto;display: flex; justify-content: space-evenly;">
+        <button type="submit" form="login-with-github" matFab matTooltip="Login with GitHub">
+            <img priority width="64" height="64" ngSrc="https://img.icons8.com/sf-black-filled/64/github.png"
+                alt="github-logo" />
+        </button>
+        <button type="submit" form="login-with-google" matFab matTooltip="Login with Google">
+            <img priority width="48" height="48" ngSrc="https://img.icons8.com/color/48/google-logo.png"
+                alt="google-logo" />
+        </button>
+    </div>
+
+    @if (displayWait()) {
+    <app-wait-spinner></app-wait-spinner>
+    }
+
+</form>
