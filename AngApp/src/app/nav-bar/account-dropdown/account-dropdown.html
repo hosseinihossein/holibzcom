@@ -1,0 +1,15 @@
+<button matIconButton [matMenuTriggerFor]="menu()"
+    [style]="userAccService.userProfileInfo.hasValue() ? imgBtnStyle : ''">
+    @if(userAccService.userProfileInfo.value()?.avatarUrl){
+    <img [ngSrc]="userAccService.userProfileInfo.value()!.avatarUrl!" priority width="40" height="40" alt="user avatar"
+        [matTooltip]="identityService.identityUserInfo.value()?.userName">
+    }
+    @else if(identityService.isAuthenticated()){
+    <mat-icon [matTooltip]="identityService.identityUserInfo.value()?.userName">
+        account_circle
+    </mat-icon>
+    }
+    @else {
+    <mat-icon>account_circle_off</mat-icon>
+    }
+</button>

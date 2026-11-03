@@ -1,1 +1,49 @@
-<p>nav-bar works!</p>
+<mat-toolbar [class.shadow]="displayShadow()">
+    <a matIconButton [routerLink]="['/']" matTooltip="Home">
+        <!--mat-icon>home</mat-icon-->
+        <img [ngSrc]="logoImgSrc()" width="40" height="40" alt="DrMona Logo" id="drmona-logo">
+    </a>
+
+    <span class="full-spacer"></span>
+
+    @if(sharedConfigs.colorScheme() === "light") {
+    <button matIconButton class="lightDarkBtn" matTooltip="Light Mode" (click)="sharedConfigs.toggleColorScheme()">
+        <mat-icon>light_mode</mat-icon>
+    </button>
+    }
+    @else {
+    <button matIconButton class="lightDarkBtn" matTooltip="Dark Mode" (click)="sharedConfigs.toggleColorScheme()">
+        <mat-icon>dark_mode</mat-icon>
+    </button>
+    }
+
+    <app-account-dropdown [menu]="account"></app-account-dropdown>
+
+    <mat-menu #account class="navbar-matMenu">
+        @if(identityService && identityService.isAuthenticated()){
+        <!--a mat-menu-item [routerLink]="['/dashboard']">
+            <mat-icon>space_dashboard</mat-icon>
+            Dashboard
+        </a-->
+        <a mat-menu-item [routerLink]="['/profile']">
+            <mat-icon>account_box</mat-icon>
+            Profile
+        </a>
+        <a mat-menu-item (click)="identityService.logout()">
+            <mat-icon>logout</mat-icon>
+            Logout
+        </a>
+        }
+        @else{
+        <a mat-menu-item [routerLink]="['/identity/login']">
+            <mat-icon>login</mat-icon>
+            Login
+        </a>
+        <a mat-menu-item [routerLink]="['/identity/signup']">
+            <mat-icon>person_add</mat-icon>
+            Create a new account
+        </a>
+        }
+    </mat-menu>
+
+</mat-toolbar>

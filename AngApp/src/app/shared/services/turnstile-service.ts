@@ -14,7 +14,7 @@ export class TurnstileService {
 
     readonly turnstileSecurityKey = "0x4AAAAAAAkeZ2wTzJxqgC_K";
 
-    isEnabled = signal(false);
+    isEnabled = signal(true);
     widgetId = signal("");
 
     constructor(){

@@ -64,6 +64,14 @@ public class IdentityController : ControllerBase
 
     // **********    Is Turnstile Enabled    **********
     [HttpGet]
+    public IActionResult IsAhuthenticated()
+    {
+        return Ok(new { isAuthenticated = User.Identity?.IsAuthenticated ?? false });
+    }
+
+
+    // **********    Is Turnstile Enabled    **********
+    [HttpGet]
     public IActionResult IsTurnstileEnabled()
     {
         return Ok(new { turnstileEnabled = _turnstileEnabled });
@@ -73,7 +81,7 @@ public class IdentityController : ControllerBase
     // **********    AntiForgery    **********
     [HttpGet]
     [GenerateAntiforgeryTokenCookie]
-    public IActionResult GetAntiForgery()
+    public IActionResult GetAntiForgeryToken()
     {
         return Ok();
     }
@@ -342,6 +350,18 @@ public class IdentityController : ControllerBase
         //Console.WriteLine($"exSigninResult: {JsonSerializer.Serialize(exSigninResult)}");
 
         return Redirect(result.Properties.RedirectUri ?? "/api/identity/Authorization/Authorize");
+    }
+
+
+
+    // **********    Signup    **********
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LogoutAsync()
+    {
+        await _signInManager.SignOutAsync();
+        return Ok();
     }
 
 
