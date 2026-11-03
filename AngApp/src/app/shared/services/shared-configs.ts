@@ -10,10 +10,14 @@ export class SharedConfigs {
         afterNextRender(()=>{
             let cs = localStorage.getItem("colorScheme");
             if(cs){
-                if(cs === 'dark') 
+                if(cs === 'dark'){
                     this._colorScheme.set('dark');
-                else 
+                    this._document.body.classList.add("dark-mode");
+                }
+                else{
                     this._colorScheme.set('light');
+                    this._document.body.classList.remove("dark-mode");
+                }
             }
         });
     }
@@ -21,9 +25,11 @@ export class SharedConfigs {
     toggleColorScheme(){
         if(this._colorScheme() === "dark"){
             this._colorScheme.set("light");
+            this._document.body.classList.remove("dark-mode");
         }
         else{
             this._colorScheme.set("dark");
+            this._document.body.classList.add("dark-mode");
         }
         localStorage.setItem("colorScheme", this.colorScheme());
     }

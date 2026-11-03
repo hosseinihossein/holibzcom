@@ -1,7 +1,7 @@
 <mat-toolbar [class.shadow]="displayShadow()">
-    <a matIconButton [routerLink]="['/']" matTooltip="Home">
+    <a matButton [routerLink]="['/']" matTooltip="Home" style="padding: 12px 0 0 0;overflow: hidden;">
         <!--mat-icon>home</mat-icon-->
-        <img [ngSrc]="logoImgSrc()" width="40" height="40" alt="DrMona Logo" id="drmona-logo">
+        <img [ngSrc]="logoImgSrc()" width="52" height="40" alt="HoLibz Logo">
     </a>
 
     <span class="full-spacer"></span>
@@ -21,10 +21,6 @@
 
     <mat-menu #account class="navbar-matMenu">
         @if(identityService && identityService.isAuthenticated()){
-        <!--a mat-menu-item [routerLink]="['/dashboard']">
-            <mat-icon>space_dashboard</mat-icon>
-            Dashboard
-        </a-->
         <a mat-menu-item [routerLink]="['/profile']">
             <mat-icon>account_box</mat-icon>
             Profile

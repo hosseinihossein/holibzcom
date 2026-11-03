@@ -1,7 +1,7 @@
 import { afterNextRender, Component, computed, DOCUMENT, HostListener, inject, injectAsync, onIdle, Signal, signal } from '@angular/core';
 import { SharedConfigs } from '../shared/services/shared-configs';
 import { NgOptimizedImage } from '@angular/common';
-import { MatIconButton } from '@angular/material/button';
+import { MatIconButton, MatFabButton, MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenu, MatMenuItem } from '@angular/material/menu';
 import { MatToolbar } from '@angular/material/toolbar';
@@ -12,7 +12,7 @@ import { IdentityService } from '../identity/identity-service';
 
 @Component({
   imports: [MatIcon, MatToolbar, MatIconButton, MatMenu, MatMenuItem, AccountDropdown, MatTooltip,
-    RouterLink, NgOptimizedImage],
+    RouterLink, NgOptimizedImage, MatButton],
   selector: 'app-nav-bar',
   styleUrl: './nav-bar.css',
   templateUrl: './nav-bar.html',
@@ -23,19 +23,14 @@ export class NavBar {
   private readonly document = inject(DOCUMENT);
   identityService = inject(IdentityService);
 
-  readonly logoImgSrc = computed<string>(()=>this.sharedConfigs.colorScheme() === 'dark' ? "HoLibz_Logo_Dark_PinkPurple_250.webp" : "HoLibz_Logo_Light_Blue_250.webp");
+  readonly logoImgSrc = computed<string>(()=>
+    this.sharedConfigs.colorScheme() === 'dark' ? 
+    "/Logo/HoLibz_Logo_Dark_Pink_Only.webp" : 
+    "/Logo/HoLibz_Logo_Light_Blue_Only.webp"
+  );
   readonly displayShadow = signal(false);
 
-  constructor(){
-    /*this.document.defaultView?.addEventListener("scroll", ()=>{
-      if(this.document.defaultView && this.document.defaultView.scrollY >= 5){
-        this.displayShadow.set(true);
-      }
-      else{
-        this.displayShadow.set(false);
-      }
-    });*/
-  }
+  
 
   @HostListener('window:scroll',[])
   onWindowScroll(){
