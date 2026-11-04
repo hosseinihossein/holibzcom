@@ -28,7 +28,7 @@ public class UserAccountManager
         var bsonDoc = new BsonDocument
         {
             {"_id", new BsonBinaryData(model.Id, GuidRepresentation.Standard)},
-            { "remoteAvatarUrl", new BsonString(model.RemoteAvatarUrl) },
+            { "avatarUrl", new BsonString(model.AvatarUrl) },
             { "createdAt", new BsonDateTime(model.CreatedAt) },
         };
         await _userProfileCollection.InsertOneAsync(bsonDoc);
@@ -40,6 +40,6 @@ public class UserAccountManager
 public class NewUserAccountModel
 {
     public Guid Id { get; set; }
-    public string? RemoteAvatarUrl { get; set; }
+    public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

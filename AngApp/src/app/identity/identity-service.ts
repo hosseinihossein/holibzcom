@@ -11,22 +11,24 @@ export class IdentityService {
   private readonly _isAuthenticated = signal(false);
   readonly isAuthenticated = computed(()=>this._isAuthenticated());
 
-  readonly identityUserInfo = httpResource<IdentityUserModel>(() => this.isAuthenticated() ? "/api/identity/GetUserInfo" : undefined);
+  readonly myIdentityInfo = signal<IdentityUserModel|null>(null);
+  //httpResource<IdentityUserModel>(() => this.isAuthenticated() ? "/api/identity/GetUserInfo" : undefined);
 
-  constructore(){
+  constructor(){
     afterNextRender(()=>{
       this.checkAuthentication()
     });
   }
 
   private checkAuthentication(){
-    this.httpClient.get<{isAuthenticated:boolean}>("/api/identity/IsAhuthenticated").subscribe((res)=>{
-      if(res && res.isAuthenticated){
+    this.httpClient.get<IdentityUserModel|null>("/api/identity/IsAhuthenticated").subscribe((res)=>{
+      if(res){
         this._isAuthenticated.set(true);
       }
       else{
         this._isAuthenticated.set(false);
       }
+      this.myIdentityInfo.set(res);
     });
   }
 
@@ -81,6 +83,7 @@ export class IdentityService {
 }
 
 export interface IdentityUserModel{
+  //isAuthenticated: boolean;
   id: string;
   userName: string;
   email: string;

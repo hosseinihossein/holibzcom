@@ -253,7 +253,7 @@ public class IdentityController : ControllerBase
                 NewUserAccountModel newUserAccountModel = new()
                 {
                     Id = user.Id,
-                    RemoteAvatarUrl = result.Principal.GetClaim("avatar_url"),
+                    AvatarUrl = result.Principal.GetClaim("avatar_url"),
                 };
                 await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
             }
@@ -334,7 +334,7 @@ public class IdentityController : ControllerBase
                 NewUserAccountModel newUserAccountModel = new()
                 {
                     Id = user.Id,
-                    RemoteAvatarUrl = result.Principal.GetClaim("picture"),
+                    AvatarUrl = result.Principal.GetClaim("picture"),
                 };
                 await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
             }

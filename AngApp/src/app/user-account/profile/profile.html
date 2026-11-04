@@ -1,0 +1,44 @@
+<mat-card appearance="outlined">
+    <mat-card-header>
+        <div style="float: inline-start;position: relative;">
+            @if(userProfileInfo()?.avatarUrl){
+            <img [ngSrc]="userProfileInfo()!.avatarUrl!" priority width="100" height="100" alt="user image"
+                id="user-profile-img">
+            }
+            @else {
+            <mat-icon style="font-size: 100px;width: 100px;height: 100px;">account_circle</mat-icon>
+            }
+        </div>
+
+        <div style="float: inline-start;position: relative;">
+            <mat-card-title>
+                <p class="persian-font" style="margin: 0;">
+                    {{userProfileInfo()?.name}}
+                </p>
+            </mat-card-title>
+
+            <mat-card-subtitle>
+                {{identityService.myIdentityInfo()?.userName}}
+            </mat-card-subtitle>
+
+        </div>
+
+    </mat-card-header>
+
+    <mat-card-content class="clearfix">
+        <pre class="persian-font">{{userProfileInfo()?.description ?? "About user ..."}}</pre>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+        @if(isMe()){
+        <a matButton="" [routerLink]="['/UserAccount/ProfileSetting']">
+            <mat-icon>person_edit</mat-icon>
+            Edit Profile
+        </a>
+        }
+    </mat-card-actions>
+
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
+    }
+</mat-card>

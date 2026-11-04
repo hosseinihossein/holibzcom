@@ -5,7 +5,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { MatTooltip } from '@angular/material/tooltip';
 import { IdentityService } from '../../identity/identity-service';
-import { UserAccountService } from '../../user-account/user-account-service';
+import { ProfileService } from '../../user-account/profile/profile-service';
 
 @Component({
   imports: [MatIconButton, MatMenuTrigger, MatIcon, NgOptimizedImage, MatTooltip],
@@ -16,7 +16,7 @@ import { UserAccountService } from '../../user-account/user-account-service';
 export class AccountDropdown {
   menu = input.required<MatMenu>();
   identityService = inject(IdentityService);
-  userAccService = inject(UserAccountService);
+  userAccService = inject(ProfileService);
 
   //imgSrc = computed(() => this.identityService.getUserImageAddress(this.identityService.userModel()));
     
