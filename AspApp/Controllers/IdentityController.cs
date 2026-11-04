@@ -36,7 +36,7 @@ public class IdentityController : ControllerBase
 
     private readonly MainConfigs _mainConfigs;
 
-    private readonly UserAccountManager _userAccountManager;
+    private readonly UserProfileManager _userProfileManager;
 
 
     public IdentityController(
@@ -47,7 +47,7 @@ public class IdentityController : ControllerBase
         IEmailSender emailSender,
         IOptions<TurnstileConfigs> turnstileOptions,
         MainConfigs mainConfigs,
-        UserAccountManager userAccountManager
+        UserProfileManager userAccountManager
     )
     {
         _signInManager = signInManager;
@@ -57,7 +57,7 @@ public class IdentityController : ControllerBase
         _emailSender = emailSender;
         _turnstileEnabled = turnstileOptions.Value.Enabled;
         _mainConfigs = mainConfigs;
-        _userAccountManager = userAccountManager;
+        _userProfileManager = userAccountManager;
     }
 
 
@@ -271,7 +271,7 @@ public class IdentityController : ControllerBase
                     Id = user.Id,
                     AvatarUrl = result.Principal.GetClaim("avatar_url"),
                 };
-                await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
+                await _userProfileManager.SubmitNewUserAccount(newUserAccountModel);
             }
             else
             {
@@ -352,7 +352,7 @@ public class IdentityController : ControllerBase
                     Id = user.Id,
                     AvatarUrl = result.Principal.GetClaim("picture"),
                 };
-                await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
+                await _userProfileManager.SubmitNewUserAccount(newUserAccountModel);
             }
             else
             {
@@ -405,7 +405,7 @@ public class IdentityController : ControllerBase
             {
                 Id = user.Id,
             };
-            await _userAccountManager.SubmitNewUserAccount(newUserAccountModel);
+            await _userProfileManager.SubmitNewUserAccount(newUserAccountModel);
 
             // signin to asign the authorization cookie to the agant
             await _signInManager.SignInAsync(user, true);

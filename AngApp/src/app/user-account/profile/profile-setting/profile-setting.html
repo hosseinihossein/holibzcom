@@ -2,11 +2,16 @@
     <mat-card-header>
         <div style="float: inline-start;position: relative;">
             <button matIconButton class="edit-btn" style="position: absolute;bottom: 0;left: -8px;"
-                matTooltip="Edit user Image" (click)="openEditImageDialog()">
+                matTooltip="Set a new image" (click)="setImage()">
                 <mat-icon>edit</mat-icon>
             </button>
-            @if(userImgSrc()){
-            <img [ngSrc]="userImgSrc()!" priority width="100" height="100" alt="user image" id="user-profile-img">
+            <button matIconButton class="edit-btn" style="position: absolute;bottom: 0;right: -8px;"
+                matTooltip="Delete the image" (click)="deleteProfileAvatar()">
+                <mat-icon>delete</mat-icon>
+            </button>
+            @if(profileService.myProfileInfo.value()?.avatarUrl){
+            <img [ngSrc]="profileService.myProfileInfo.value()?.avatarUrl!" priority width="100" height="100"
+                alt="profile avatar" id="profile-avatar">
             }
             @else {
             <mat-icon style="font-size: 100px;width: 100px;height: 100px;">account_circle</mat-icon>
@@ -16,30 +21,30 @@
         <div style="float: inline-start;position: relative;">
             <mat-card-title>
                 <p class="persian-font" style="margin: 0;">
-                    {{userModel()?.fullName}}
+                    {{profileService.myProfileInfo.value()?.name ?? "Name"}}
                     <button matIconButton class="edit-btn" style="transform: translateY(-4px);float: right;"
-                        matTooltip="Edit Full Name" (click)="openEditFullNameDialog()">
+                        matTooltip="Edit name" (click)="setName()">
                         <mat-icon>edit</mat-icon>
                     </button>
                 </p>
             </mat-card-title>
 
-            <mat-card-subtitle>
+            <!--mat-card-subtitle>
                 {{userModel()?.nationalId}}
                 <button matIconButton class="edit-btn" matTooltip="Edit National Id"
                     (click)="openEditNationalIdDialog()" style="transform: translateY(-4px);float: right;">
                     <mat-icon>edit</mat-icon>
                 </button>
-            </mat-card-subtitle>
+            </mat-card-subtitle-->
 
         </div>
 
     </mat-card-header>
 
     <mat-card-content class="clearfix">
-        <pre>{{userModel()?.description ?? "About user ..."}}</pre>
+        <pre>{{profileService.myProfileInfo.value()?.description ?? "Description ..."}}</pre>
         <button matIconButton class="edit-btn" style="transform: translateY(-16px);float: right;"
-            matTooltip="Edit Description" (click)="openEditDescriptionDialog()">
+            matTooltip="Edit description" (click)="setDescription()">
             <mat-icon>edit</mat-icon>
         </button>
     </mat-card-content>

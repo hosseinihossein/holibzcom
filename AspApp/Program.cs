@@ -217,7 +217,7 @@ public class Program
         // Configs
         builder.Services.Configure<MongoDbConfigs>(builder.Configuration.GetSection("MongoDb"));
         // UserAccountManager
-        builder.Services.AddSingleton<UserAccountManager>();
+        builder.Services.AddSingleton<UserProfileManager>();
 
 
         //**************************** NATS **************************

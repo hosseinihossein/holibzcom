@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 })
 export class Result {
   //readonly dialogRef = inject(MatDialogRef<Result>);
-  readonly data = inject<ResultDialogInputData>(MAT_DIALOG_DATA);
+  readonly data = inject<ResultDataModel>(MAT_DIALOG_DATA);
   readonly router = inject(Router);
 
   goToLinkAddress(){
@@ -20,7 +20,7 @@ export class Result {
     }
   }
 }
-export class ResultDialogInputData {
+export class ResultDataModel {
   status?: "success" | "info" | "warning" = "info";
   title?:string; 
   description?:string[]; 

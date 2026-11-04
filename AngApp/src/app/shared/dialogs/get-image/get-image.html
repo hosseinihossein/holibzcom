@@ -11,6 +11,7 @@
         <canvas #canvas style="display:none;"></canvas>
     </div>
 
+    @if(data.hasTitle){
     <mat-form-field appearance="fill" subscriptSizing="dynamic">
         <mat-label>Title</mat-label>
         <input type="text" matInput [formField]="titleForm.Title">
@@ -22,10 +23,11 @@
         </mat-error>
         }
     </mat-form-field>
+    }
 
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleModel().Title}"
+        <button matButton="filled" [mat-dialog-close]="{file:selectedFile()!,title:titleModel().Title}"
             [disabled]="!selectedFile() || titleForm().invalid()">
             Save
         </button>

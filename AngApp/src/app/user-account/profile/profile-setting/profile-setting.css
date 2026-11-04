@@ -5,7 +5,7 @@ mat-card{
     display: block;
 }
 
-img#patient-profile-img{
+img#profile-avatar{
     width: 100px;
     height: 100px;
     object-fit: cover;

@@ -14,9 +14,7 @@ import { MatInput } from '@angular/material/input';
   templateUrl: './get-image.html',
 })
 export class GetImage {
-  readonly data = inject<{
-    imageSize?:number,
-  }>(MAT_DIALOG_DATA);
+  readonly data = inject<GetImageDataModel>(MAT_DIALOG_DATA);
   
   selectedFile = signal<File | null>(null);
   previewImgSrc = signal<string|null>(null);
@@ -27,9 +25,11 @@ export class GetImage {
   titleModel = signal({Title:''});
   titleForm = form(this.titleModel,
     (schemaPath)=>{
-      required(schemaPath.Title,{message:'Title is required!'});
-      minLength(schemaPath.Title, 3, {message: 'Title cannot be less than 3 characters!'});
-      maxLength(schemaPath.Title, 60, {message: 'Title cannot be more than 60 characters!'});
+      if(this.data.hasTitle){
+        required(schemaPath.Title,{message:'Title is required!'});
+        minLength(schemaPath.Title, 3, {message: 'Title cannot be less than 3 characters!'});
+        maxLength(schemaPath.Title, 60, {message: 'Title cannot be more than 60 characters!'});
+      }
     }
   );
 
@@ -102,3 +102,13 @@ export class GetImage {
   }
   
 }
+
+export interface GetImageDataModel{
+  hasTitle:boolean;
+  imageSize?:number;
+}
+export interface GetImageResultModel{
+  file:File;
+  title:string;
+}
+

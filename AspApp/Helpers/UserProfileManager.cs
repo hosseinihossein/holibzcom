@@ -5,10 +5,10 @@ using MongoDB.Driver;
 
 namespace AspApp.Helpers;
 
-public class UserAccountManager
+public class UserProfileManager
 {
     private readonly IMongoCollection<BsonDocument> _userProfileCollection;
-    public UserAccountManager(
+    public UserProfileManager(
         IMongoDatabase mongoUserDb,
         IOptions<MongoDbConfigs> mongoDbConfigsOptions
     )
@@ -40,6 +40,7 @@ public class UserAccountManager
 public class NewUserAccountModel
 {
     public Guid Id { get; set; }
+    public string? Name { get; set; }
     public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

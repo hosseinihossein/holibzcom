@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormField, form, required, maxLength, minLength } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
-import { MatDialogContent, MatDialogActions, MatDialogClose, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogContent, MatDialogActions, MatDialogClose, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 
@@ -13,15 +13,10 @@ import { MatInput } from '@angular/material/input';
   templateUrl: './edit-input-text.html',
 })
 export class EditInputText {
-  //readonly dialogRef = inject(MatDialogRef<EditInput>);
-  readonly data = inject<{
-    label:string, 
-    value:string, 
-    maxLength?:number, 
-    minLength?:number,
-  }>(MAT_DIALOG_DATA);
+  readonly dialogRef = inject(MatDialogRef<EditInputText,EditInputTextResultModel>);
+  readonly data = inject<EditInputTextDataModel>(MAT_DIALOG_DATA);
 
-  inputModel = signal({InputValue:this.data.value});
+  inputModel = signal({InputValue:this.data.value ?? ''});
   inputForm = form(this.inputModel,
     (schemaPath)=>{
       required(schemaPath.InputValue, {message:`${this.data.label} is required!`});
@@ -34,4 +29,14 @@ export class EditInputText {
     },
   );
 
+}
+
+export interface EditInputTextDataModel{
+  label:string;
+  value?:string; 
+  maxLength?:number;
+  minLength?:number;
+}
+export interface EditInputTextResultModel{
+  value:string;
 }

@@ -13,7 +13,7 @@
 
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="{value:inputModel().InputValue}"
+        <button matButton="filled" [mat-dialog-close]="{value:inputModel().InputValue.trim()}"
             [disabled]="inputModel().InputValue === data.value || inputForm().invalid()">
             Save
         </button>

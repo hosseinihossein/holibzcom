@@ -14,14 +14,9 @@ import { MatInput } from '@angular/material/input';
 })
 export class EditTextarea {
   //readonly dialogRef = inject(MatDialogRef<EditTextarea>);
-  readonly data = inject<{
-    label:string, 
-    value:string,
-    maxLength?:number, 
-    minLength?:number,
-  }>(MAT_DIALOG_DATA);
+  readonly data = inject<EditTextareaDataModel>(MAT_DIALOG_DATA);
 
-  inputModel = signal({TextValue:this.data.value});
+  inputModel = signal({TextValue:this.data.value ?? ''});
   inputForm = form(this.inputModel,
     (schemaPath)=>{
       required(schemaPath.TextValue, {message:`${this.data.label} is required!`});
@@ -33,15 +28,15 @@ export class EditTextarea {
       }
     },
   );
+  
+}
 
-  /*myText = new FormControl(this.data.value,{
-    nonNullable:true,
-    validators:[Validators.required, Validators.maxLength(4000)],
-  });
-
-  isPersian = signal(this.data.persian ?? false);
-
-  togglePersian(){
-    this.isPersian.update(p=>!p);
-  }*/
+export interface EditTextareaDataModel{
+  label:string, 
+  value?:string,
+  maxLength?:number, 
+  minLength?:number,
+}
+export interface EditTextareaResultModel{
+  value:string;
 }
