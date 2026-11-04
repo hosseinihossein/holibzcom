@@ -62,11 +62,27 @@ public class IdentityController : ControllerBase
 
 
 
-    // **********    Is Turnstile Enabled    **********
+    // **********    Check Authentication    **********
     [HttpGet]
-    public IActionResult IsAhuthenticated()
+    public async Task<IActionResult> CheckAuthentication()
     {
-        return Ok(new { isAuthenticated = User.Identity?.IsAuthenticated ?? false });
+        if (User.Identity?.IsAuthenticated ?? false)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+            {
+                return Ok(null);
+            }
+            return Ok(new
+            {
+                user.Id,
+                user.UserName,
+                user.Email,
+                user.EmailConfirmed,
+                roles = (await _userManager.GetRolesAsync(user)).ToArray(),
+            });
+        }
+        return Ok(null);
     }
 
 

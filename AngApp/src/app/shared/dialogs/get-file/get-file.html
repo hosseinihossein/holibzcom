@@ -1,0 +1,29 @@
+<mat-dialog-content>
+
+    <div id="file-box" class="clearfix">
+        <span #fileName>{{selectedFile()?.name}}</span>
+        <button matButton="elevated" id="selectButton" (click)="fileInput.click()">Select New File</button>
+        <input type="file" hidden #fileInput (change)="onSelectFile($event)">
+    </div>
+
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>Title</mat-label>
+        <input type="text" matInput [formField]="titleForm.Title">
+        @if(titleForm.Title().touched() && titleForm.Title().invalid()){
+        <mat-error>
+            @for(error of titleForm.Title().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-dialog-actions align="end" style="float:inline-end;">
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleModel().Title}"
+            [disabled]="!selectedFile() || titleForm().invalid()">
+            Save
+        </button>
+    </mat-dialog-actions>
+
+</mat-dialog-content>

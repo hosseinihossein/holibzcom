@@ -10,7 +10,9 @@ export class ProfileService {
 
   readonly profileInfoUrl = "/api/UserAccount/GetProfileInfo?userId=";
   readonly myProfileInfo = httpResource<UserProfileInfo>(() => 
-    `${this.profileInfoUrl}${this.identityService.myIdentityInfo()?.id}`
+    this.identityService.myIdentityInfo()?.id ?
+    `${this.profileInfoUrl}${this.identityService.myIdentityInfo()?.id}` :
+    undefined
   );
 
   constructor(){

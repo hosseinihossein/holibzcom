@@ -1,1 +1,58 @@
-<p>profile-setting works!</p>
+<mat-card appearance="outlined">
+    <mat-card-header>
+        <div style="float: inline-start;position: relative;">
+            <button matIconButton class="edit-btn" style="position: absolute;bottom: 0;left: -8px;"
+                matTooltip="Edit user Image" (click)="openEditImageDialog()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            @if(userImgSrc()){
+            <img [ngSrc]="userImgSrc()!" priority width="100" height="100" alt="user image" id="user-profile-img">
+            }
+            @else {
+            <mat-icon style="font-size: 100px;width: 100px;height: 100px;">account_circle</mat-icon>
+            }
+        </div>
+
+        <div style="float: inline-start;position: relative;">
+            <mat-card-title>
+                <p class="persian-font" style="margin: 0;">
+                    {{userModel()?.fullName}}
+                    <button matIconButton class="edit-btn" style="transform: translateY(-4px);float: right;"
+                        matTooltip="Edit Full Name" (click)="openEditFullNameDialog()">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                </p>
+            </mat-card-title>
+
+            <mat-card-subtitle>
+                {{userModel()?.nationalId}}
+                <button matIconButton class="edit-btn" matTooltip="Edit National Id"
+                    (click)="openEditNationalIdDialog()" style="transform: translateY(-4px);float: right;">
+                    <mat-icon>edit</mat-icon>
+                </button>
+            </mat-card-subtitle>
+
+        </div>
+
+    </mat-card-header>
+
+    <mat-card-content class="clearfix">
+        <pre>{{userModel()?.description ?? "About user ..."}}</pre>
+        <button matIconButton class="edit-btn" style="transform: translateY(-16px);float: right;"
+            matTooltip="Edit Description" (click)="openEditDescriptionDialog()">
+            <mat-icon>edit</mat-icon>
+        </button>
+    </mat-card-content>
+
+    <!--mat-card-actions align="start">
+        <button matFab extended (click)="openChangePasswordDialog()">
+            <mat-icon>key</mat-icon>
+            Change Password
+        </button>
+    </mat-card-actions-->
+
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
+    }
+
+</mat-card>

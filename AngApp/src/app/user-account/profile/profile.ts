@@ -27,7 +27,7 @@ export class Profile {
   userId = computed(() =>
     this.params()?.get("userId") ?? this.identityService.myIdentityInfo()?.id
   );
-  isMe = computed(()=>this.userId() === this.identityService.myIdentityInfo()?.id);
+  isMe = computed(()=>this.userId() && this.userId() === this.identityService.myIdentityInfo()?.id);
   
   private otherUserProfileInfo = httpResource<UserProfileInfo>(()=>
     this.isMe() ?

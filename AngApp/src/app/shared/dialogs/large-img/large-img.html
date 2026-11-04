@@ -1,0 +1,14 @@
+<mat-dialog-content>
+    <div class="buttons-box">
+        <div class="background"></div>
+        <button matIconButton matTooltip="Close" mat-dialog-close>
+            <mat-icon style="color: var(--mat-sys-error);">close</mat-icon>
+        </button>
+        <a matIconButton matTooltip="Download" [href]="data.imgSrc" download="">
+            <mat-icon style="color: var(--mat-sys-on-surface);">download</mat-icon>
+        </a>
+    </div>
+
+    <img [ngSrc]="data.imgSrc" width="720" height="720" [alt]="data.imgTitle" #theImage [class.fitTo90]="fitTo90()"
+        [style]="cursorZoomIn() ? 'cursor:zoom-in;' : ''">
+</mat-dialog-content>

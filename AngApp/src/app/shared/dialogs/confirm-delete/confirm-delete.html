@@ -1,0 +1,12 @@
+<h2 matDialogTitle>
+    <mat-icon style="color: var(--mat-sys-on-error-container);">warning</mat-icon>
+    Warning
+</h2>
+<mat-dialog-content>
+    <p>Are you sure you want to permanently <strong>Delete</strong> this {{data.type}}?</p>
+    <p style="color:var(--mat-sys-on-error-container);">"{{data.title}}"</p>
+    <mat-dialog-actions>
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" class="warning" [mat-dialog-close]="true">Yes</button>
+    </mat-dialog-actions>
+</mat-dialog-content>

@@ -1,0 +1,23 @@
+<mat-dialog-content>
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>{{data.label}}</mat-label>
+        <input type="text" matInput [formField]="inputForm.TextValue">
+        <textarea matInput [formField]="inputForm.TextValue" placeholder="Write here.." rows="5"></textarea>
+        @if(inputForm.TextValue().touched() && inputForm.TextValue().invalid()){
+        <mat-error>
+            @for(error of inputForm.TextValue().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-dialog-actions align="end" style="float:inline-end;">
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [mat-dialog-close]="{value:inputModel().TextValue}"
+            [disabled]="data.value === inputModel().TextValue || inputForm().invalid()">
+            Submit
+        </button>
+    </mat-dialog-actions>
+
+</mat-dialog-content>

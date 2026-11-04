@@ -1,0 +1,13 @@
+mat-form-field{
+    width: 100%;
+}
+mat-dialog-content{
+    width: 400px;
+}
+button#selectButton{
+    margin: 8px;
+}
+#file-box{
+    margin: 4px auto;
+    width: fit-content;
+}

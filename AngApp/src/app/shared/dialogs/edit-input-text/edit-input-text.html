@@ -1,0 +1,22 @@
+<mat-dialog-content>
+    <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>{{data.label}}</mat-label>
+        <input type="text" matInput [formField]="inputForm.InputValue">
+        @if(inputForm.InputValue().touched() && inputForm.InputValue().invalid()){
+        <mat-error>
+            @for(error of inputForm.InputValue().errors(); track error){
+            {{error.message}}
+            }
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-dialog-actions align="end" style="float:inline-end;">
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [mat-dialog-close]="{value:inputModel().InputValue}"
+            [disabled]="inputModel().InputValue === data.value || inputForm().invalid()">
+            Save
+        </button>
+    </mat-dialog-actions>
+
+</mat-dialog-content>

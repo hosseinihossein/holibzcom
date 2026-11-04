@@ -1,0 +1,18 @@
+@if(data.title){
+<h2 mat-dialog-title>
+    {{data.title}}
+</h2>
+}
+<mat-dialog-content>
+    @if(data.description){
+    @for(des of data.description; track des){
+    <p>{{des}}</p>
+    }
+    }
+    <mat-dialog-actions>
+        <button matButton mat-dialog-close>Ok</button>
+        @if(data.link){
+        <button matButton="filled" (click)="goToLinkAddress();" mat-dialog-close>{{data.link.name}}</button>
+        }
+    </mat-dialog-actions>
+</mat-dialog-content>

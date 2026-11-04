@@ -21,7 +21,7 @@ export class IdentityService {
   }
 
   private checkAuthentication(){
-    this.httpClient.get<IdentityUserModel|null>("/api/identity/IsAhuthenticated").subscribe((res)=>{
+    this.httpClient.get<IdentityUserModel|null>("/api/identity/CheckAuthentication").subscribe((res)=>{
       if(res){
         this._isAuthenticated.set(true);
       }

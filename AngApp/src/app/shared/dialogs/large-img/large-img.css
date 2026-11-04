@@ -1,0 +1,42 @@
+mat-dialog-content{
+    max-height: 95vh;
+    position: relative;
+}
+@media screen and (max-width:800px) {
+    mat-dialog-content{
+        max-height: 80vh;
+    }
+}
+img{
+    display: block;
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+    object-fit: contain;
+    cursor: zoom-out;
+    background-color: white;
+}
+/*img.zoomedIn{
+    min-width: calc(90vw - 48px);
+}*/
+img.fitTo90{
+    width: calc(90vw - 48px);
+}
+
+div.buttons-box{
+    float: right;
+    position: sticky;
+    top: 0;
+    right: 0;
+    left: calc(100% - 40px);
+    width: 40px;
+}
+div.buttons-box div.background{
+    background-color: var(--mat-sys-background);
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    opacity: 0.5;
+}

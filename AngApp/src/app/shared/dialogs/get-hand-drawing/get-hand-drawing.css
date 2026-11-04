@@ -1,0 +1,27 @@
+/*mat-dialog-content{
+    width: fit-content;
+    height: 100%;
+}*/
+.mat-mdc-dialog-content {
+  max-height: 80vh;
+}
+
+#pointer {
+    position: absolute;
+    width: 10px; /* default, will update */
+    height: 10px;
+    border: 1px solid black;
+    border-radius: 50%;
+    pointer-events: none;  /* so it doesn't block drawing */
+    transform: translate(-50%, -50%);
+    visibility: hidden;
+    /*background-color:black;*/
+}
+
+canvas#board { 
+    border: 1px solid var(--mat-sys-on-surface); 
+    touch-action: none; 
+    background-color: white;
+    /*width: 70vw;
+    height: 60vh;*/
+}

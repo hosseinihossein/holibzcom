@@ -3,7 +3,11 @@ import { authGaurd } from "../../identity/auth-guard";
 
 export const profileRoutes : Routes = [
     {
-        path: 'UserAccount/profile/:userId',
+        path: 'UserAccount/Profile/:userId',
+        loadComponent: () => import('./profile').then(m=>m.Profile),
+    },
+    {
+        path: 'UserAccount/Profile',
         loadComponent: () => import('./profile').then(m=>m.Profile),
     },
     {
