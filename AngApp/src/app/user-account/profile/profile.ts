@@ -20,24 +20,35 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 })
 export class Profile {
   identityService = inject(IdentityService);
-  userAccService = inject(ProfileService);
+  profileService = inject(ProfileService);
   activatedRoute = inject(ActivatedRoute);
 
   private params = toSignal(this.activatedRoute.paramMap)
   userId = computed(() =>
-    this.params()?.get("userId") ?? this.identityService.myIdentityInfo()?.id
+    this.params()?.get("userId") ?? this.identityService.myIdentityInfo.value()?.id
   );
-  isMe = computed(()=>this.userId() && this.userId() === this.identityService.myIdentityInfo()?.id);
+  isMe = computed(()=>this.userId() && this.userId() === this.identityService.myIdentityInfo.value()?.id);
   
-  private otherUserProfileInfo = httpResource<UserProfileInfo>(()=>
+  private otherProfileInfo = httpResource<UserProfileInfo>(()=>
     this.isMe() ?
     undefined :
-    this.userAccService.profileInfoUrl+this.userId()
+    this.profileService.profileInfoUrl+this.userId()
   );
-  userProfileInfo = computed(()=>
+  profileInfo = computed(()=>
     this.isMe() ?
-    this.userAccService.myProfileInfo.value() :
-    this.otherUserProfileInfo.value()
+    this.profileService.myProfileInfo.value() :
+    this.otherProfileInfo.value()
+  );
+  
+  private otherProfileUsername = httpResource<string>(()=>
+    this.isMe() ?
+    undefined :
+    this.identityService.GetUsernameUrl+this.userId()
+  );
+  profileUsername = computed(()=>
+    this.isMe() ?
+    this.identityService.myIdentityInfo.value()?.userName :
+    this.otherProfileUsername.value()
   );
 
   displayWaitSpinner = signal(false);

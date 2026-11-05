@@ -1,0 +1,26 @@
+<mat-card appearance="outlined">
+    <mat-card-header>
+        @if(libraryCardInfo.value()?.imageUrl){
+        <img [ngSrc]="libraryCardInfo.value()?.imageUrl!" width="40" height="40" alt="library logo" matCardAvatar>
+        }
+        @else {
+        <mat-icon matCardAvatar style="font-size: 36px;text-align: center;/*width: 40px;height: 40px;*/">
+            account_balance
+        </mat-icon>
+        }
+        <mat-card-title>{{libraryCardInfo.value()?.title}}</mat-card-title>
+        <mat-card-subtitle>from <a [routerLink]='"/UserAccount/Profile/"+libraryCardInfo.value()?.ownerId'>
+                {{ownerUsername.value()}}</a>
+        </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        <p style="font-size: 12px;">{{libraryCardInfo.value()?.description}}</p>
+        <h4 style="margin: 8px 0;">Shelves:</h4>
+        <ul style="margin: 0;padding-left: 16px;">
+            @for(shelfTitle of libraryCardInfo.value()?.shelves; track shelfTitle){
+            <li>{{shelfTitle}}</li>
+            }
+        </ul>
+    </mat-card-content>
+</mat-card>

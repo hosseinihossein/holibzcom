@@ -1,9 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
+import { MatTabsModule } from '@angular/material/tabs';
 
 @Component({
-  imports: [],
+  imports: [MatTabsModule,],
   selector: 'app-dashboard',
   styleUrl: './dashboard.css',
   templateUrl: './dashboard.html',
 })
-export class Dashboard {}
+export class Dashboard {
+  userId = input.required<string>();
+  
+}

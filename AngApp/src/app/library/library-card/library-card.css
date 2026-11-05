@@ -1,0 +1,37 @@
+mat-card{
+    width: 256px;
+    height: 256px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 100ms;
+}
+
+mat-card:hover{
+    box-shadow: 0 5px 10px var(--mat-sys-outline-variant);
+}
+
+mat-card-header{
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+mat-card-title{
+    font-size: 18px;
+}
+
+mat-card-subtitle{
+    font-size: 12px;
+}
+
+mat-card-content{
+    flex: 1 1 auto;
+    overflow: auto;
+}
+mat-card-content li{
+    font-size: 12px;
+}
+
+/*img{
+    object-fit: contain;
+    border-radius: 50%;
+    border: 1px solid var(--mat-sys-outline-variant);
+}*/

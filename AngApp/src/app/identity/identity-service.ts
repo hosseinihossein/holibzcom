@@ -1,36 +1,23 @@
-import { afterNextRender, computed, inject, Service, signal } from '@angular/core';
+import { afterNextRender, computed, inject, PLATFORM_ID, Service, signal } from '@angular/core';
 import { LoginFormModel } from './login/login';
 import { HttpClient, HttpParams, httpResource } from '@angular/common/http';
 import { SignupFormModel } from './signup/signup';
 import { tap } from 'rxjs/operators';
+import { isPlatformBrowser } from '@angular/common';
 
 @Service()
 export class IdentityService {
   private readonly httpClient = inject(HttpClient);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly _isAuthenticated = signal(false);
-  readonly isAuthenticated = computed(()=>this._isAuthenticated());
+  readonly isAuthenticated = computed(()=>this.myIdentityInfo.hasValue());
 
-  readonly myIdentityInfo = signal<IdentityUserModel|null>(null);
-  //httpResource<IdentityUserModel>(() => this.isAuthenticated() ? "/api/identity/GetUserInfo" : undefined);
+  readonly myIdentityInfo = httpResource<IdentityUserModel>(() => this.isBrowser ? "/api/identity/CheckAuthentication" : undefined);
 
-  constructor(){
-    afterNextRender(()=>{
-      this.checkAuthentication()
-    });
-  }
+  readonly GetUsernameUrl = "/api/identity/GetUsername?userId=";
 
-  private checkAuthentication(){
-    this.httpClient.get<IdentityUserModel|null>("/api/identity/CheckAuthentication").subscribe((res)=>{
-      if(res){
-        this._isAuthenticated.set(true);
-      }
-      else{
-        this._isAuthenticated.set(false);
-      }
-      this.myIdentityInfo.set(res);
-    });
-  }
+  constructor(){}
 
   submitLogin(formModel: LoginFormModel){
     let httpParams = new HttpParams()
@@ -43,7 +30,7 @@ export class IdentityService {
       tap({
         next: res => {
           if(res.ok){
-            this.checkAuthentication();
+            this.myIdentityInfo.reload();
           }
         }
       }),
@@ -61,7 +48,7 @@ export class IdentityService {
       tap({
         next: res => {
           if(res.success){
-            this.checkAuthentication();
+            this.myIdentityInfo.reload();
           }
         }
       }),
@@ -72,10 +59,15 @@ export class IdentityService {
     this.httpClient.post("/api/identity/Logout", null).pipe(
       tap({
         next: () => {
-          this.checkAuthentication();
+          this.myIdentityInfo.reload();
         }
       }),
     );
+  }
+
+  getUsername(userId:string){
+    const httpParams = new HttpParams().set("userId",userId);
+    return this.httpClient.get<{username:string|null}>("/api/identity/GetUsername",{params:httpParams});
   }
 
   
@@ -83,7 +75,6 @@ export class IdentityService {
 }
 
 export interface IdentityUserModel{
-  //isAuthenticated: boolean;
   id: string;
   userName: string;
   email: string;

@@ -66,13 +66,10 @@ public class IdentityController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> CheckAuthentication()
     {
-        if (User.Identity?.IsAuthenticated ?? false)
+        if ((User.Identity?.IsAuthenticated ?? false) &&
+            (await _userManager.GetUserAsync(User)) is IdentityUser<Guid> user &&
+            user is not null)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user is null)
-            {
-                return Ok(null);
-            }
             return Ok(new
             {
                 user.Id,
@@ -122,8 +119,9 @@ public class IdentityController : ControllerBase
 
         if (user is null)
         {
-            ModelState.AddModelError("UsernameOrEmail", "Couldn't find any user with the specified Username or Email");
-            return BadRequest(ModelState);
+            //ModelState.AddModelError("UsernameOrEmail", "Couldn't find any user with the specified Username or Email");
+            //return BadRequest(ModelState);
+            return NotFound(new { message = "User not found." });
         }
 
         Microsoft.AspNetCore.Identity.SignInResult result =
@@ -491,8 +489,7 @@ public class IdentityController : ControllerBase
     [Authorize]
     [ValidateTurnstile]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ResendEmailValidation(
-    [FromForm][StringLength(2048)] string CfTurnstileResponse)
+    public async Task<IActionResult> ResendEmailValidation()
     {
         IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
         if (user is null)
@@ -598,8 +595,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [ValidateTurnstile]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ForgetPassword([FromForm][StringLength(128)] string email,
-    [FromForm][StringLength(2048)] string CfTurnstileResponse)
+    public async Task<IActionResult> ForgetPassword([FromForm][StringLength(128)] string email)
     {
         IdentityUser<Guid>? user = await _userManager.FindByEmailAsync(email);
         if (user is not null)
@@ -608,8 +604,9 @@ public class IdentityController : ControllerBase
 
             return Ok(new { success = true });
         }
-        ModelState.AddModelError("Email", "Email Not found!");
-        return BadRequest(ModelState);
+        //ModelState.AddModelError("Email", "Email Not found!");
+        //return BadRequest(ModelState);
+        return NotFound(new { message = "Email not found." });
     }
 
     private async Task SendResetPasswordLink(IdentityUser<Guid> user)
@@ -634,8 +631,9 @@ public class IdentityController : ControllerBase
         IdentityUser<Guid>? user = await _userManager.FindByEmailAsync(formModel.Email);
         if (user is null)
         {
-            ModelState.AddModelError("User", "User Not Found! Email is invalid!");
-            return BadRequest(ModelState);
+            //ModelState.AddModelError("User", "User Not Found! Email is invalid!");
+            //return BadRequest(ModelState);
+            return NotFound(new { message = "User not found. Email is invalid!" });
         }
 
         var result =
@@ -695,7 +693,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitUsername([FromQuery][StringLength(60, MinimumLength = 3)] string username)
+    public async Task<IActionResult> SubmitUsername([FromForm][StringLength(60, MinimumLength = 3)] string username)
     {
         IdentityUser<Guid>? user = await _userManager.GetUserAsync(User);
         if (user is null)
@@ -717,6 +715,22 @@ public class IdentityController : ControllerBase
         return BadRequest(ModelState);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetUsername([FromQuery] Guid userId)
+    {
+        // Queries only the UserName column from the database, minimizing overhead
+        var username = await _userManager.Users
+        .Where(u => u.Id == userId)
+        .Select(u => u.UserName)
+        .FirstOrDefaultAsync();
 
+        if (username == null)
+        {
+            // Return 404 Not Found for a missing resource
+            return NotFound(new { message = "User not found." });
+        }
+
+        return Ok(new { username });
+    }
 
 }

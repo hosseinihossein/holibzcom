@@ -29,7 +29,7 @@ export class ProfileSetting {
   displayWaitSpinner = signal(false);
 
   private aft = httpResource(()=>
-    this.identityService.myIdentityInfo() ?
+    this.identityService.myIdentityInfo.value() ?
     "/api/identity/GetAntiForgeryToken" :
     undefined
   );
